@@ -1,8 +1,9 @@
 import {useMemo, useState} from 'react'
-import {Alert, Button, Card, Col, DatePicker, Row, Select, Space, Spin, Typography} from 'antd'
+import {Alert, Button, Card, Col, Row, Select, Space, Spin, Typography} from 'antd'
+import {DatePicker} from 'antd-jalali'
 import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts'
 import {useQuery} from '@tanstack/react-query'
-import dayjs, {Dayjs} from 'dayjs'
+import moment from 'moment-jalaali'
 import {pspMetricsService} from '../../services/pspMetricsService'
 import {AggregationPeriod, PspVendor} from '../../types/pspMetrics'
 
@@ -21,9 +22,9 @@ const PSP_COLORS: Record<PspVendor, string> = {
 
 const PspMetricsPage = () => {
   const [selectedPsps, setSelectedPsps] = useState<PspVendor[]>(PSP_VENDORS)
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
-    dayjs().subtract(15, 'days'),
-    dayjs(),
+  const [dateRange, setDateRange] = useState<[moment.Moment, moment.Moment]>([
+    moment().subtract(15, 'days'),
+    moment(),
   ])
   const [aggregationPeriod, setAggregationPeriod] = useState<AggregationPeriod>('DAY')
 
@@ -32,8 +33,8 @@ const PspMetricsPage = () => {
     queryFn: async () => {
       return await pspMetricsService.getPspMetrics({
         pspVendors: selectedPsps,
-        startDate: dateRange[0].format('YYYY-MM-DD'),
-        endDate: dateRange[1].format('YYYY-MM-DD'),
+        startDate: dateRange[0].format('jYYYY-jMM-jDD'),
+        endDate: dateRange[1].format('jYYYY-jMM-jDD'),
         aggregationPeriod,
       })
     },
@@ -114,7 +115,7 @@ const PspMetricsPage = () => {
             <Col xs={24} sm={12} lg={8}>
               <RangePicker
                 value={dateRange}
-                onChange={(dates) => {
+                onChange={(dates: [moment.Moment | null, moment.Moment | null] | null) => {
                   if (dates && dates[0] && dates[1]) {
                     setDateRange([dates[0], dates[1]])
                   }

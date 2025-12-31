@@ -1,4 +1,5 @@
 import axios from 'axios'
+import {handleApiError} from './errorHandler'
 
 const api = axios.create({
   baseURL: 'https://hitman.jibit.cloud',
@@ -36,6 +37,9 @@ api.interceptors.response.use(
       // Unauthorized - redirect to login
       localStorage.removeItem('token')
       window.location.href = '/login'
+    } else {
+      // Handle all other errors with the global error handler
+      handleApiError(error)
     }
     return Promise.reject(error)
   }

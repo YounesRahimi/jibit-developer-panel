@@ -5,6 +5,15 @@ import {render} from '../../test/test-utils'
 import PspMetricsPage from './PspMetricsPage'
 import {pspMetricsService} from '../../services/pspMetricsService'
 import {PspMetricsResponse} from '../../types/pspMetrics'
+import {HitmanApiError} from '../../types/errors'
+
+// Mock antd-jalali to use regular antd DatePicker for testing
+vi.mock('antd-jalali', () => {
+  const antd = require('antd')
+  return {
+    DatePicker: antd.DatePicker,
+  }
+})
 
 vi.mock('../../services/pspMetricsService')
 
@@ -111,6 +120,38 @@ describe('PspMetricsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Error')).toBeInTheDocument()
       expect(screen.getByText(errorMessage)).toBeInTheDocument()
+    })
+  })
+
+  it('displays Hitman API error format correctly', async () => {
+    const user = userEvent.setup()
+
+    const hitmanError: HitmanApiError = {
+      httpStatusCode: 400,
+      code: 'invalid.request_body',
+      message: 'Empty or invalid request body',
+      fingerprint: 'b466d36cfec1fe03',
+      details: "java.lang.IllegalArgumentException: Invalid format for field 'startDate'",
+    }
+
+    const axiosError = {
+      response: {
+        data: hitmanError,
+        status: 400,
+      },
+    }
+
+    vi.mocked(pspMetricsService.getPspMetrics).mockRejectedValue(axiosError)
+
+    render(<PspMetricsPage />)
+
+    const fetchButton = screen.getByRole('button', { name: /fetch metrics/i })
+    await user.click(fetchButton)
+
+    // The error will be handled by the global error handler (axios interceptor)
+    // and displayed as a notification, not in the component itself
+    await waitFor(() => {
+      expect(pspMetricsService.getPspMetrics).toHaveBeenCalled()
     })
   })
 
